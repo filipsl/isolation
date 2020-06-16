@@ -4,34 +4,43 @@
 
 using namespace std;
 
+int W, H, L, K;
+
+vector<vector<char> > read_board();
+
+void print_board(vector<vector<char> > &board);
+
+
 int main() {
 
     std::ios::sync_with_stdio(false);
-    int w, h, l, k;
 
-    scanf("%d %d %d %d", &w, &h, &l, &k);
+    scanf("%d %d %d %d", &W, &H, &L, &K);
 
     char string[256];
     scanf("%s", string);
 
+    vector<vector<char> > board = read_board();
+    print_board(board);
 
-    vector<vector<char> > board(h+2, vector<char>(w + 2, '.'));
+    return 0;
+}
 
-    char c;
-    for (int i = 0; i < h; i++) {
-        for (int j = 0; j < w; j++) {
-            scanf(" %c", &c);
-            board[i + 1][j + 1] = c;
+vector<vector<char> > read_board() {
+    vector<vector<char> > board(H + 2, vector<char>(W + 2, '.'));
+    for (int i = 0; i < H; i++) {
+        for (int j = 0; j < W; j++) {
+            scanf(" %c", &board[i + 1][j + 1]);
         }
     }
+    return board;
+}
 
-    for (int i = 0; i < h+2; i++) {
-
-        for (int j = 0; j < w+2; j++) {
+void print_board(vector<vector<char>> &board) {
+    for (int i = 0; i < H + 2; i++) {
+        for (int j = 0; j < W + 2; j++) {
             printf("%c", board[i][j]);
         }
         printf("\n");
     }
-
-    return 0;
 }
