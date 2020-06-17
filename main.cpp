@@ -4,6 +4,7 @@
 #include <queue>
 #include <unordered_set>
 #include <list>
+#include <climits>
 
 int W, H, L, K;
 
@@ -209,8 +210,8 @@ void place_people(std::vector<std::vector<char>> &board, std::vector<std::vector
 
     while (placed_people < K && !cells.empty()) {
 
-        cell_coords currentCellCords =  get_coords(cells.front().id);
-        if(is_covered[currentCellCords.x][currentCellCords.y]){
+        cell_coords currentCellCords = get_coords(cells.front().id);
+        if (is_covered[currentCellCords.x][currentCellCords.y]) {
             cells.pop_front();
             continue;
         }
@@ -222,36 +223,51 @@ void place_people(std::vector<std::vector<char>> &board, std::vector<std::vector
         cells.pop_front();
 
         while (!cells.empty() && cells.front().range == current_range) {
-            currentCellCords =  get_coords(cells.front().id);
-            if(!is_covered[currentCellCords.x][currentCellCords.y])
+            currentCellCords = get_coords(cells.front().id);
+            if (!is_covered[currentCellCords.x][currentCellCords.y])
                 same_range_cells.insert(cells.front().id);
             cells.pop_front();
         }
 
         while (!same_range_cells.empty() && placed_people < K) {
             int max_neighbour_range = 0;
+            int min_real_cover = INT_MAX;
             int cell_with_max_neighbor = *same_range_cells.begin();
-            bool covered_found = false;
+            int cell_with_min_real_cover = *same_range_cells.begin();
             cell_coords cellCoords;
             for (auto cell_id : same_range_cells) {
+                cellCoords = get_coords(cell_id);
+                std::unordered_set<int> visited_cells = visit_cells(board, cellCoords.x, cellCoords.y);
+                int current_real_cover = 0;
+                for (auto visited_cell_id : visited_cells) {
+                    cell_coords visitedCellCoords = get_coords(visited_cell_id);
+                    if (!is_covered[visitedCellCoords.x][visitedCellCoords.y]) {
+                        current_real_cover++;
+                    }
+                }
+
+                if (current_real_cover < min_real_cover) {
+                    min_real_cover = current_real_cover;
+                    cell_with_min_real_cover = cell_id;
+                }
+
                 std::vector<int> neighbours = get_neighbors(board, cell_id);
                 for (auto neighbor_id : neighbours) {
                     cell_coords neighbor_coords = get_coords(neighbor_id);
-                    if (is_covered[neighbor_coords.x][neighbor_coords.y]) {
-                        cell_with_max_neighbor = cell_id;
-                        covered_found = true;
-                        break;
-                    } else if (!is_covered[neighbor_coords.x][neighbor_coords.y] &&
-                               max_neighbour_range < ranges[neighbor_coords.x][neighbor_coords.y]) {
+                    if (!is_covered[neighbor_coords.x][neighbor_coords.y] &&
+                        max_neighbour_range < ranges[neighbor_coords.x][neighbor_coords.y]) {
                         max_neighbour_range = ranges[neighbor_coords.x][neighbor_coords.y];
                         cell_with_max_neighbor = cell_id;
                     }
                 }
-                if (covered_found)
-                    break;
             }
-            cellCoords = get_coords(cell_with_max_neighbor);
-            printf("%d %d\n", cellCoords.y - 1, cellCoords.x - 1);
+            if (min_real_cover < current_range) {
+                cellCoords = get_coords(cell_with_min_real_cover);
+                printf("%d %d\n", cellCoords.y - 1, cellCoords.x - 1);
+            } else {
+                cellCoords = get_coords(cell_with_max_neighbor);
+                printf("%d %d\n", cellCoords.y - 1, cellCoords.x - 1);
+            }
             std::unordered_set<int> visited_cells = visit_cells(board, cellCoords.x, cellCoords.y);
             for (auto visited_cell_id : visited_cells) {
                 cell_coords visitedCellCoords = get_coords(visited_cell_id);
