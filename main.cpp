@@ -22,6 +22,8 @@ void print_board(std::vector<std::vector<char> > &board);
 
 std::vector<std::vector<int> > get_ranges(std::vector<std::vector<char>> &board);
 
+std::unordered_set<int> visit_cells(std::vector<std::vector<char>> &board, const int x, const int y);
+
 int get_cell_range(std::vector<std::vector<char>> &board, int x, int y);
 
 int get_id(int x, int y);
@@ -82,9 +84,7 @@ std::vector<std::vector<int> > get_ranges(std::vector<std::vector<char>> &board)
     return ranges;
 }
 
-int get_cell_range(std::vector<std::vector<char>> &board, const int x, const int y) {
-    if(board[x+1][y+1] == '.')
-        return 0;
+std::unordered_set<int> visit_cells(std::vector<std::vector<char>> &board, const int x, const int y) {
 
     std::queue<bfs_node> cells_queue;
     std::unordered_set<int> visited_cells;
@@ -104,7 +104,13 @@ int get_cell_range(std::vector<std::vector<char>> &board, const int x, const int
             }
         }
     }
-    return visited_cells.size();
+    return visited_cells;
+}
+
+int get_cell_range(std::vector<std::vector<char>> &board, const int x, const int y) {
+    if (board[x + 1][y + 1] == '.')
+        return 0;
+    return visit_cells(board, x, y).size();
 }
 
 int get_id(const int x, const int y) {
