@@ -21,9 +21,10 @@ struct cell_coords {
 struct cell_range {
     long long id;
     long long range;
+    long long n_range;
 
     bool operator<(const cell_range &str) const {
-        return (range < str.range);
+        return (range == str.range) ? (n_range < str.n_range) : (range < str.range);
     }
 };
 
@@ -33,6 +34,9 @@ void print_board(std::vector<std::vector<char>> &board);
 
 std::vector<std::vector<long long>> get_ranges(std::vector<std::vector<char>> &board);
 
+std::vector<std::vector<long long>> get_neighbors_ranges(std::vector<std::vector<char>> &board,
+                                                         std::vector<std::vector<long long>> &ranges);
+
 std::unordered_set<long long> visit_cells(std::vector<std::vector<char>> &board, long long x, long long y);
 
 long long get_cell_range(std::vector<std::vector<char>> &board, long long x, long long y);
@@ -41,11 +45,14 @@ long long get_id(long long x, long long y);
 
 long long get_id(cell_coords coords);
 
+cell_coords get_coords(const long long id);
+
 std::vector<long long> get_neighbors(std::vector<std::vector<char>> &board, long long id);
 
 void print_ranges(std::vector<std::vector<long long>> &ranges);
 
-void place_people(std::vector<std::vector<char>> &board, std::vector<std::vector<long long>> &ranges);
+void place_people(std::vector<std::vector<char>> &board, std::vector<std::vector<long long>> &ranges,
+                  std::vector<std::vector<long long>> &neighbors_ranges);
 
 int main() {
 
@@ -59,8 +66,11 @@ int main() {
     std::vector<std::vector<char>> board = read_board();
 //    print_board(board);
     std::vector<std::vector<long long>> ranges = get_ranges(board);
+    std::vector<std::vector<long long>> neighbors_ranges = get_neighbors_ranges(board, ranges);
 //    print_ranges(ranges);
-    place_people(board, ranges);
+//    print_ranges(neighbors_ranges);
+//    place_people(board, ranges);
+    place_people(board, ranges, neighbors_ranges);
 
     return 0;
 }
@@ -93,6 +103,26 @@ std::vector<std::vector<long long>> get_ranges(std::vector<std::vector<char>> &b
         }
     }
     return ranges;
+}
+
+std::vector<std::vector<long long>> get_neighbors_ranges(std::vector<std::vector<char>> &board,
+                                                         std::vector<std::vector<long long>> &ranges) {
+
+    std::vector<std::vector<long long>> neighbors_ranges(H + 2, std::vector<long long>(W + 2, 0));
+
+    std::unordered_set<long long> visited_cells;
+
+
+    for (long long i = 1; i < H + 1; i++) {
+        for (long long j = 1; j < W + 1; j++) {
+            visited_cells = visit_cells(board, i, j);
+            for (auto visited_cell_id : visited_cells) {
+                cell_coords visitedCellCoords = get_coords(visited_cell_id);
+                neighbors_ranges[i][j] += ranges[visitedCellCoords.x][visitedCellCoords.y];
+            }
+        }
+    }
+    return neighbors_ranges;
 }
 
 std::unordered_set<long long> visit_cells(std::vector<std::vector<char>> &board, const long long x, const long long y) {
@@ -188,13 +218,14 @@ void print_ranges(std::vector<std::vector<long long>> &ranges) {
     }
 }
 
-void place_people(std::vector<std::vector<char>> &board, std::vector<std::vector<long long>> &ranges) {
+void place_people(std::vector<std::vector<char>> &board, std::vector<std::vector<long long>> &ranges,
+                  std::vector<std::vector<long long>> &neighbors_ranges) {
     std::list<cell_range> cells;
 
     for (long long i = 1; i < H + 1; i++) {
         for (long long j = 1; j < W + 1; j++) {
             if (ranges[i][j])
-                cells.push_back(cell_range{get_id(i, j), ranges[i][j]});
+                cells.push_back(cell_range{get_id(i, j), ranges[i][j], neighbors_ranges[i][j]});
         }
     }
 
